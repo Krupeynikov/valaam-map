@@ -4,216 +4,489 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Карта Валаама</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f2f5; }
         #map { height: 100vh; width: 100%; }
-        .controls { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 1000; }
-        .control-btn { background: white; border: none; width: 50px; height: 50px; border-radius: 50%; box-shadow: 0 2px 10px rgba(0,0,0,0.2); cursor: pointer; font-size: 22px; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+        
+        .controls {
+            position: fixed; bottom: 20px; right: 20px;
+            display: flex; flex-direction: column; gap: 10px;
+            z-index: 1000;
+        }
+        .control-btn {
+            background: white; border: none;
+            width: 50px; height: 50px; border-radius: 50%;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            cursor: pointer; font-size: 22px;
+            transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center;
+        }
         .control-btn:hover { transform: scale(1.1); }
         .control-btn.active { background: #4CAF50; color: white; }
-        .control-btn.tracking { background: #2196F3; color: white; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { box-shadow: 0 2px 10px rgba(33, 150, 243, 0.4); } 50% { box-shadow: 0 2px 20px rgba(33, 150, 243, 0.8); } 100% { box-shadow: 0 2px 10px rgba(33, 150, 243, 0.4); } }
-        .accuracy-info { position: fixed; bottom: 80px; right: 20px; background: white; padding: 8px 12px; border-radius: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); font-size: 12px; color: #666; z-index: 1000; display: none; }
+        .control-btn.tracking { 
+            background: #2196F3; color: white;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 2px 10px rgba(33, 150, 243, 0.4); }
+            50% { box-shadow: 0 2px 20px rgba(33, 150, 243, 0.8); }
+            100% { box-shadow: 0 2px 10px rgba(33, 150, 243, 0.4); }
+        }
+        
+        .accuracy-info {
+            position: fixed; bottom: 80px; right: 20px;
+            background: white; padding: 8px 12px;
+            border-radius: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            font-size: 12px; color: #666;
+            z-index: 1000; display: none;
+        }
         .accuracy-info.active { display: block; }
-        .chapter-list { position: fixed; top: 10px; right: 10px; background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 1000; max-height: 300px; overflow-y: auto; max-width: 250px; }
-        .chapter-list-title { font-weight: bold; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 2px solid #eee; font-size: 14px; }
-        .chapter-item { padding: 8px 12px; margin: 4px 0; background: #f8f9fa; border-radius: 6px; cursor: pointer; font-size: 13px; }
+        
+        .chapter-list {
+            position: fixed; top: 10px; right: 10px;
+            background: white; padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000; max-height: 300px;
+            overflow-y: auto; max-width: 250px;
+        }
+        .chapter-list-title {
+            font-weight: bold; margin-bottom: 10px;
+            padding-bottom: 10px; border-bottom: 2px solid #eee;
+            font-size: 14px;
+        }
+        .chapter-item {
+            padding: 8px 12px; margin: 4px 0;
+            background: #f8f9fa; border-radius: 6px;
+            cursor: pointer; font-size: 13px;
+        }
         .chapter-item:hover { background: #e9ecef; }
         .chapter-item.active { background: #4CAF50; color: white; }
-        .info-panel { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 20px; border-radius: 16px 16px 0 0; box-shadow: 0 -4px 20px rgba(0,0,0,0.1); max-height: 60vh; overflow-y: auto; transform: translateY(100%); transition: transform 0.3s ease; z-index: 1000; }
+        
+        .route-info {
+            position: fixed; top: 10px; left: 10px;
+            background: white; padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000; max-width: 300px;
+            display: none;
+        }
+        .route-info.active { display: block; }
+        
+        .clear-route-btn {
+            margin-top: 10px; padding: 8px 16px;
+            background: #f44336; color: white;
+            border: none; border-radius: 6px;
+            cursor: pointer; font-size: 13px;
+        }
+        
+        .info-panel {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: white; padding: 20px;
+            border-radius: 16px 16px 0 0;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+            max-height: 60vh; overflow-y: auto;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
         .info-panel.active { transform: translateY(0); }
         .info-panel h3 { margin-bottom: 10px; color: #333; font-size: 18px; }
         .info-panel p { color: #666; line-height: 1.5; margin-bottom: 15px; font-size: 14px; }
-        .close-btn { position: absolute; top: 15px; right: 15px; background: #f0f2f5; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 18px; color: #666; }
-        .external-route-btn { display: block; width: 100%; padding: 14px; margin-top: 10px; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 15px; text-decoration: none; text-align: center; font-weight: bold; }
-        .external-route-btn.yandex { background: #FC3F1D; }
-        .external-route-btn.yandex:hover { background: #D93316; }
-        .external-route-btn.google { background: #2196F3; }
-        .external-route-btn.google:hover { background: #1976D2; }
-        .user-location-marker { position: relative; }
-        .user-location-dot { width: 20px; height: 20px; background: #2196F3; border: 3px solid white; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
-        .user-location-pulse { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 20px; height: 20px; background: rgba(33, 150, 243, 0.3); border-radius: 50%; animation: user-pulse 2s infinite; }
-        @keyframes user-pulse { 0% { width: 20px; height: 20px; opacity: 1; } 100% { width: 60px; height: 60px; opacity: 0; } }
+        
+        .close-btn {
+            position: absolute; top: 15px; right: 15px;
+            background: #f0f2f5; border: none;
+            width: 32px; height: 32px; border-radius: 50%;
+            cursor: pointer; font-size: 18px; color: #666;
+        }
+        
+        .route-btn {
+            display: block; width: 100%;
+            padding: 12px; margin-top: 10px;
+            background: #4CAF50; color: white;
+            border: none; border-radius: 6px;
+            cursor: pointer; font-size: 14px;
+            font-weight: bold;
+        }
+        .route-btn:hover { background: #45a049; }
+        
+        .external-route-btn {
+            display: block; width: 100%;
+            padding: 10px; margin-top: 8px;
+            background: #2196F3; color: white;
+            border: none; border-radius: 6px;
+            cursor: pointer; font-size: 13px;
+            text-decoration: none; text-align: center;
+        }
+        .external-route-btn:hover { background: #1976D2; }
+        
+        .loading {
+            position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8); color: white;
+            padding: 20px 40px; border-radius: 8px;
+            z-index: 2000; display: none;
+        }
+        .loading.active { display: block; }
     </style>
+    
+    <!-- ⚠️ ЗАМЕНИТЕ YOUR_API_KEY на ваш реальный ключ Яндекс.Карт -->
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=YOUR_API_KEY&lang=ru_RU" type="text/javascript"></script>
 </head>
 <body>
     <div id="map"></div>
+    <div class="loading" id="loading">Загрузка...</div>
+    
     <div class="chapter-list" id="chapterList">
         <div class="chapter-list-title">📍 Точки экскурсии</div>
     </div>
+    
     <div class="controls">
         <button class="control-btn" id="locationBtn" title="Моё местоположение">📍</button>
         <button class="control-btn" id="trackBtn" title="Включить отслеживание">🛰️</button>
     </div>
+    
     <div class="accuracy-info" id="accuracyInfo">
         🎯 Точность: <span id="accuracyValue">—</span> м
     </div>
+    
+    <div class="route-info" id="routeInfo">
+        <h4>🧭 Маршрут</h4>
+        <p id="routeDistance">Расстояние: —</p>
+        <p id="routeDuration">Время: —</p>
+        <button class="clear-route-btn" onclick="clearRoute()">❌ Убрать маршрут</button>
+    </div>
+    
     <div class="info-panel" id="infoPanel">
         <button class="close-btn" onclick="closePanel()">×</button>
         <h3 id="infoTitle">Название</h3>
         <p id="infoText">Описание</p>
-        <a href="#" id="yandexRouteLink" class="external-route-btn yandex" target="_blank">🗺️ Открыть маршрут в Яндекс.Картах</a>
-        <a href="#" id="googleRouteLink" class="external-route-btn google" target="_blank">🌍 Открыть маршрут в Google Maps</a>
+        <button class="route-btn" onclick="buildRouteToCurrent()">🧭 Построить маршрут от моего местоположения</button>
+        <a href="#" id="yandexRouteLink" class="external-route-btn" target="_blank">🗺️ Открыть в Яндекс.Картах</a>
+        <a href="#" id="googleRouteLink" class="external-route-btn" target="_blank">🌍 Открыть в Google Maps</a>
     </div>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <script>
         const chapters = [
-            { id: 1, title: "Глава 1. Ладога и путь на Валаам", lat: 61.3539, lng: 30.9186, description: "Суровые скалистые берега Ладожских шхер." },
-            { id: 2, title: "Глава 2. Основание монастыря", lat: 61.3545, lng: 30.9195, description: "Преподобные Сергий и Герман Валаамские." },
-            { id: 3, title: "Глава 3. Центральная усадьба", lat: 61.3550, lng: 30.9200, description: "Центральная усадьба Валаамского монастыря." },
-            { id: 4, title: "Глава 4. Символ Валаама", lat: 61.3555, lng: 30.9205, description: "Спасо-Преображенский собор." },
-            { id: 5, title: "Глава 5. Нижний храм", lat: 61.3548, lng: 30.9198, description: "Мощи Преподобных Сергия и Германа." },
-            { id: 6, title: "Глава 6. Игумен Дамаскин", lat: 61.3552, lng: 30.9202, description: "Один из самых известных настоятелей." },
-            { id: 7, title: "Глава 7. Жизнь монахов", lat: 61.3547, lng: 30.9197, description: "Публикации Валаама." },
-            { id: 8, title: "Хор братии", lat: 61.3553, lng: 30.9203, description: "Хор братии Валаамского монастыря." },
-            { id: 9, title: "Глава 8. Валаамские сады", lat: 61.3546, lng: 30.9196, description: "Из публикаций Валаама о садах." },
-            { id: 10, title: "Глава 9. Валаам в ХХ веке", lat: 61.3549, lng: 30.9199, description: "Новый Валаам в Финляндии." },
-            { id: 11, title: "Глава 10. Знаменитые гости", lat: 61.3551, lng: 30.9201, description: "Ф. И. Тютчев, Н.К. Рерих." },
-            { id: 12, title: "Глава 11. Современный Валаам", lat: 61.3554, lng: 30.9204, description: "Дорогие гости, спасибо за путешествие!" }
+            { id: 1, title: "Причал", lat: 61.393015, lng: 30.937484 },
+            { id: 2, title: "Центральная усадьба", lat: 61.389116, lng: 30.945151 },
+            { id: 3, title: "Никольский полуостров", lat: 61.397561, lng: 30.929445 },
         ];
-        const map = L.map('map').setView([61.3539, 30.9186], 15);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors', maxZoom: 19
-        }).addTo(map);
-        let userMarker = null, accuracyCircle = null, watchId = null, isTracking = false;
-        let currentDestination = null;
-        window.userLocation = null;
-        const markers = [];
-        const chapterList = document.getElementById('chapterList');
-        chapters.forEach((chapter, index) => {
-            const marker = L.marker([chapter.lat, chapter.lng])
-                .addTo(map)
-                .bindPopup(`<b>${chapter.title}</b><br>${chapter.description}`);
-            marker.on('click', () => {
-                showInfo(chapter);
-                highlightChapter(index);
-                currentDestination = { lat: chapter.lat, lng: chapter.lng, title: chapter.title };
-                updateExternalLinks();
+
+        let myMap, placemarks = [], multiRoute = null;
+        let userPlacemark = null, accuracyCircle = null;
+        let watchId = null, isTracking = false;
+        let userLocation = null, currentDestination = null;
+
+        ymaps.ready(init);
+
+        function init() {
+            myMap = new ymaps.Map("map", {
+                center: [61.3539, 30.9186],
+                zoom: 15,
+                controls: ['zoomControl', 'fullscreenControl']
             });
-            markers.push(marker);
-            const item = document.createElement('div');
-            item.className = 'chapter-item';
-            item.textContent = `${index + 1}. ${chapter.title}`;
-            item.onclick = () => {
-                map.setView([chapter.lat, chapter.lng], 17);
-                marker.openPopup();
-                showInfo(chapter);
-                highlightChapter(index);
-                currentDestination = { lat: chapter.lat, lng: chapter.lng, title: chapter.title };
-                updateExternalLinks();
-            };
-            chapterList.appendChild(item);
-        });
+
+            const chapterList = document.getElementById('chapterList');
+
+            chapters.forEach((chapter, index) => {
+                const placemark = new ymaps.Placemark(
+                    [chapter.lat, chapter.lng],
+                    {
+                        hintContent: chapter.title,
+                        balloonContent: `
+                            <div style="min-width: 200px;">
+                                <h3 style="margin: 0 0 8px 0; color: #333;">${chapter.title}</h3>
+                                <p style="margin: 0 0 10px 0; color: #666; font-size: 13px;">${chapter.description}</p>
+                                <button onclick="setDestination(${chapter.lat}, ${chapter.lng}, '${chapter.title}')" style="width: 100%; padding: 8px; background: #4CAF50; color: white; border: none; border-radius: 6px; cursor: pointer;">🧭 Маршрут сюда</button>
+                            </div>
+                        `
+                    },
+                    { preset: 'islands#greenCircleIcon', iconColor: '#4CAF50' }
+                );
+
+                placemark.events.add('click', () => {
+                    showInfo(chapter);
+                    highlightChapter(index);
+                    currentDestination = { lat: chapter.lat, lng: chapter.lng, title: chapter.title };
+                    updateExternalLinks();
+                });
+                
+                myMap.geoObjects.add(placemark);
+                placemarks.push(placemark);
+
+                const item = document.createElement('div');
+                item.className = 'chapter-item';
+                item.textContent = `${index + 1}. ${chapter.title}`;
+                item.onclick = () => {
+                    myMap.setCenter([chapter.lat, chapter.lng], 17);
+                    placemark.balloon.open();
+                    showInfo(chapter);
+                    highlightChapter(index);
+                    currentDestination = { lat: chapter.lat, lng: chapter.lng, title: chapter.title };
+                    updateExternalLinks();
+                };
+                chapterList.appendChild(item);
+            });
+
+            document.getElementById('locationBtn').addEventListener('click', getUserLocation);
+            document.getElementById('trackBtn').addEventListener('click', toggleTracking);
+        }
+
+        // === ОБНОВЛЕНИЕ ССЫЛОК НА ВНЕШНИЕ КАРТЫ ===
+        
         function updateExternalLinks() {
             if (!currentDestination) return;
+            
             const dest = currentDestination;
+            
+            // Яндекс.Карты
             let yandexUrl;
-            if (window.userLocation) {
-                yandexUrl = `https://yandex.ru/maps/?pt=${window.userLocation.lng},${window.userLocation.lat}~${dest.lng},${dest.lat}&rtt=pt&z=15`;
+            if (userLocation) {
+                yandexUrl = `https://yandex.ru/maps/?pt=${userLocation.lng},${userLocation.lat}~${dest.lng},${dest.lat}&rtt=pt&z=15`;
             } else {
                 yandexUrl = `https://yandex.ru/maps/?pt=${dest.lng},${dest.lat}&z=16`;
             }
             document.getElementById('yandexRouteLink').href = yandexUrl;
+            
+            // Google Maps
             let googleUrl;
-            if (window.userLocation) {
-                googleUrl = `https://www.google.com/maps/dir/${window.userLocation.lat},${window.userLocation.lng}/${dest.lat},${dest.lng}/@${dest.lat},${dest.lng},15z/data=!3m1!4b1!4m2!4m1!3e2`;
+            if (userLocation) {
+                googleUrl = `https://www.google.com/maps/dir/${userLocation.lat},${userLocation.lng}/${dest.lat},${dest.lng}/@${dest.lat},${dest.lng},15z/data=!3m1!4b1!4m2!4m1!3e2`;
             } else {
                 googleUrl = `https://www.google.com/maps/place/${dest.lat},${dest.lng}`;
             }
             document.getElementById('googleRouteLink').href = googleUrl;
         }
-        currentDestination = { lat: chapters[0].lat, lng: chapters[0].lng, title: chapters[0].title };
-        updateExternalLinks();
+
+        // === ГЕОЛОКАЦИЯ ===
+
         function updateUserMarker(lat, lng, accuracy) {
-            const latlng = [lat, lng];
-            if (userMarker) map.removeLayer(userMarker);
-            if (accuracyCircle) map.removeLayer(accuracyCircle);
-            const userIcon = L.divIcon({
-                className: 'user-location-marker',
-                html: `<div class="user-location-pulse"></div><div class="user-location-dot"></div>`,
-                iconSize: [20, 20], iconAnchor: [10, 10]
+            const coords = [lat, lng];
+            
+            if (userPlacemark) myMap.geoObjects.remove(userPlacemark);
+            if (accuracyCircle) myMap.geoObjects.remove(accuracyCircle);
+            
+            userPlacemark = new ymaps.Placemark(coords, {
+                hintContent: 'Ваше местоположение',
+                balloonContent: '📍 Вы здесь'
+            }, {
+                preset: 'islands#blueCircleDotIcon',
+                iconColor: '#2196F3'
             });
-            userMarker = L.marker(latlng, { icon: userIcon, zIndexOffset: 1000 })
-                .addTo(map).bindPopup('📍 Ваше местоположение');
-            accuracyCircle = L.circle(latlng, {
-                radius: accuracy, color: '#2196F3', fillColor: '#2196F3', fillOpacity: 0.1, weight: 1
-            }).addTo(map);
+            
+            accuracyCircle = new ymaps.Circle(coords, accuracy, {
+                fillColor: '#2196F320',
+                strokeColor: '#2196F3',
+                strokeWidth: 1
+            });
+            
+            myMap.geoObjects.add(accuracyCircle);
+            myMap.geoObjects.add(userPlacemark);
+            
             document.getElementById('accuracyValue').textContent = Math.round(accuracy);
             document.getElementById('accuracyInfo').classList.add('active');
         }
+
         function getUserLocation() {
-            if (!navigator.geolocation) { alert('Геолокация не поддерживается'); return; }
+            showLoading();
+            if (!navigator.geolocation) {
+                hideLoading();
+                alert('Геолокация не поддерживается');
+                return;
+            }
+            
             navigator.geolocation.getCurrentPosition(
                 (position) => {
+                    hideLoading();
                     const { latitude, longitude, accuracy } = position.coords;
-                    window.userLocation = { lat: latitude, lng: longitude };
+                    userLocation = { lat: latitude, lng: longitude };
                     updateUserMarker(latitude, longitude, accuracy);
-                    map.setView([latitude, longitude], 17);
+                    myMap.setCenter([latitude, longitude], 17);
                     document.getElementById('locationBtn').classList.add('active');
                     updateExternalLinks();
                 },
                 (error) => {
-                    let errorMsg = 'Не удалось получить местоположение';
-                    switch(error.code) {
-                        case error.PERMISSION_DENIED: errorMsg = 'Вы запретили доступ к геолокации. Разрешите в настройках.'; break;
-                        case error.POSITION_UNAVAILABLE: errorMsg = 'Информация о местоположении недоступна.'; break;
-                        case error.TIMEOUT: errorMsg = 'Превышено время ожидания.'; break;
-                    }
-                    alert(errorMsg);
+                    hideLoading();
+                    handleLocationError(error);
                 },
                 { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
             );
         }
+
         function toggleTracking() {
-            if (isTracking) stopTracking(); else startTracking();
+            if (isTracking) stopTracking();
+            else startTracking();
         }
+
         function startTracking() {
-            if (!navigator.geolocation) { alert('Геолокация не поддерживается'); return; }
+            if (!navigator.geolocation) {
+                alert('Геолокация не поддерживается');
+                return;
+            }
+            
+            showLoading();
+            
             watchId = navigator.geolocation.watchPosition(
                 (position) => {
+                    hideLoading();
                     const { latitude, longitude, accuracy } = position.coords;
-                    window.userLocation = { lat: latitude, lng: longitude };
+                    userLocation = { lat: latitude, lng: longitude };
                     updateUserMarker(latitude, longitude, accuracy);
                     updateExternalLinks();
+                    
+                    // Перестраиваем маршрут, если он есть
+                    if (multiRoute && currentDestination) {
+                        rebuildRoute();
+                    }
                 },
-                (error) => { alert('Ошибка геолокации: ' + error.message); stopTracking(); },
+                (error) => {
+                    hideLoading();
+                    handleLocationError(error);
+                    stopTracking();
+                },
                 { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
             );
+            
             isTracking = true;
             document.getElementById('trackBtn').classList.add('tracking');
             document.getElementById('trackBtn').title = 'Остановить отслеживание';
         }
+
         function stopTracking() {
-            if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+            if (watchId !== null) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+            }
             isTracking = false;
             document.getElementById('trackBtn').classList.remove('tracking');
             document.getElementById('trackBtn').title = 'Включить отслеживание';
         }
+
+        function handleLocationError(error) {
+            let errorMsg = 'Не удалось получить местоположение';
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    errorMsg = '❌ Вы запретили доступ к геолокации.\n\nРазрешите в настройках.';
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    errorMsg = '📡 Информация недоступна.\n\nПопробуйте на открытом пространстве.';
+                    break;
+                case error.TIMEOUT:
+                    errorMsg = '⏱ Превышено время ожидания.';
+                    break;
+            }
+            alert(errorMsg);
+        }
+
+        // === МАРШРУТЫ ===
+
+        function buildRoute() {
+            if (!userLocation) {
+                alert('Сначала определите ваше местоположение (📍)');
+                return;
+            }
+            if (!currentDestination) {
+                alert('Выберите точку назначения');
+                return;
+            }
+            
+            showLoading();
+            if (multiRoute) myMap.geoObjects.remove(multiRoute);
+            
+            multiRoute = new ymaps.multiRouter.MultiRoute({
+                referencePoints: [
+                    [userLocation.lat, userLocation.lng],
+                    [currentDestination.lat, currentDestination.lng]
+                ],
+                params: { routingMode: 'pedestrian' }
+            }, {
+                boundsAutoApply: true,
+                routeStrokeColor: '#4CAF50',
+                routeStrokeWidth: 6,
+                wayPointVisible: false
+            });
+
+            myMap.geoObjects.add(multiRoute);
+            
+            multiRoute.model.events.add('requestsuccess', function() {
+                hideLoading();
+                const route = multiRoute.getRoutes().get(0);
+                if (route) {
+                    const distance = route.properties.get('distance');
+                    const duration = route.properties.get('duration');
+                    document.getElementById('routeDistance').textContent = `Расстояние: ${distance.text}`;
+                    document.getElementById('routeDuration').textContent = `Время: ${duration.text}`;
+                    document.getElementById('routeInfo').classList.add('active');
+                }
+            });
+            
+            multiRoute.model.events.add('requesterror', function() {
+                hideLoading();
+                alert('Не удалось построить маршрут. Попробуйте использовать кнопки "Открыть в Яндекс.Картах" или "Google Maps".');
+            });
+        }
+
+        function rebuildRoute() {
+            if (multiRoute) {
+                myMap.geoObjects.remove(multiRoute);
+                buildRoute();
+            }
+        }
+
+        function setDestination(lat, lng, title) {
+            currentDestination = { lat, lng, title };
+            updateExternalLinks();
+            buildRoute();
+        }
+
+        function buildRouteToCurrent() {
+            if (currentDestination) buildRoute();
+        }
+
+        function clearRoute() {
+            if (multiRoute) {
+                myMap.geoObjects.remove(multiRoute);
+                multiRoute = null;
+            }
+            document.getElementById('routeInfo').classList.remove('active');
+        }
+
+        // === UI ===
+
         function showInfo(chapter) {
             document.getElementById('infoTitle').textContent = chapter.title;
             document.getElementById('infoText').textContent = chapter.description;
             document.getElementById('infoPanel').classList.add('active');
             updateExternalLinks();
         }
+
         function highlightChapter(activeIndex) {
             document.querySelectorAll('.chapter-item').forEach((el, index) => {
                 if (index === activeIndex) {
                     el.classList.add('active');
                     el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                } else { el.classList.remove('active'); }
+                } else {
+                    el.classList.remove('active');
+                }
             });
         }
+
         function closePanel() { document.getElementById('infoPanel').classList.remove('active'); }
-        document.getElementById('locationBtn').addEventListener('click', getUserLocation);
-        document.getElementById('trackBtn').addEventListener('click', toggleTracking);
-        map.on('click', closePanel);
+        function showLoading() { document.getElementById('loading').classList.add('active'); }
+        function hideLoading() { document.getElementById('loading').classList.remove('active'); }
+
         document.getElementById('infoPanel').addEventListener('click', (e) => e.stopPropagation());
+
         if (window.Telegram && window.Telegram.WebApp) {
             window.Telegram.WebApp.ready();
             window.Telegram.WebApp.expand();
         }
+
         window.addEventListener('beforeunload', stopTracking);
     </script>
 </body>
