@@ -4,279 +4,60 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Карта Валаама</title>
-    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f2f5; }
         #map { height: 100vh; width: 100%; }
-        
-        .controls {
-            position: fixed; bottom: 20px; right: 20px;
-            display: flex; flex-direction: column; gap: 10px;
-            z-index: 1000;
-        }
-        .control-btn {
-            background: white; border: none;
-            width: 50px; height: 50px; border-radius: 50%;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            cursor: pointer; font-size: 22px;
-            transition: all 0.2s;
-            display: flex; align-items: center; justify-content: center;
-        }
+        .controls { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 1000; }
+        .control-btn { background: white; border: none; width: 50px; height: 50px; border-radius: 50%; box-shadow: 0 2px 10px rgba(0,0,0,0.2); cursor: pointer; font-size: 22px; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
         .control-btn:hover { transform: scale(1.1); }
         .control-btn.active { background: #4CAF50; color: white; }
-        .control-btn.tracking { 
-            background: #2196F3; color: white;
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0% { box-shadow: 0 2px 10px rgba(33, 150, 243, 0.4); }
-            50% { box-shadow: 0 2px 20px rgba(33, 150, 243, 0.8); }
-            100% { box-shadow: 0 2px 10px rgba(33, 150, 243, 0.4); }
-        }
-        
-        .accuracy-info {
-            position: fixed; bottom: 80px; right: 20px;
-            background: white; padding: 8px 12px;
-            border-radius: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            font-size: 12px; color: #666;
-            z-index: 1000; display: none;
-        }
+        .control-btn.tracking { background: #2196F3; color: white; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 2px 10px rgba(33, 150, 243, 0.4); } 50% { box-shadow: 0 2px 20px rgba(33, 150, 243, 0.8); } 100% { box-shadow: 0 2px 10px rgba(33, 150, 243, 0.4); } }
+        .accuracy-info { position: fixed; bottom: 80px; right: 20px; background: white; padding: 8px 12px; border-radius: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); font-size: 12px; color: #666; z-index: 1000; display: none; }
         .accuracy-info.active { display: block; }
-        
-        .chapter-list {
-            position: fixed; top: 10px; right: 10px;
-            background: white; padding: 10px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            z-index: 1000; max-height: 300px;
-            overflow-y: auto; max-width: 250px;
-        }
-        .chapter-list-title {
-            font-weight: bold; margin-bottom: 10px;
-            padding-bottom: 10px; border-bottom: 2px solid #eee;
-            font-size: 14px;
-        }
-        .chapter-item {
-            padding: 8px 12px; margin: 4px 0;
-            background: #f8f9fa; border-radius: 6px;
-            cursor: pointer; font-size: 13px;
-        }
+        .chapter-list { position: fixed; top: 10px; right: 10px; background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 1000; max-height: 300px; overflow-y: auto; max-width: 250px; }
+        .chapter-list-title { font-weight: bold; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 2px solid #eee; font-size: 14px; }
+        .chapter-item { padding: 8px 12px; margin: 4px 0; background: #f8f9fa; border-radius: 6px; cursor: pointer; font-size: 13px; }
         .chapter-item:hover { background: #e9ecef; }
         .chapter-item.active { background: #4CAF50; color: white; }
-        
-        .route-info {
-            position: fixed; top: 10px; left: 10px;
-            background: white; padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            z-index: 1000; max-width: 300px;
-            display: none;
-        }
-        .route-info.active { display: block; }
-        
-        .clear-route-btn {
-            margin-top: 10px; padding: 8px 16px;
-            background: #f44336; color: white;
-            border: none; border-radius: 6px;
-            cursor: pointer; font-size: 13px;
-        }
-        
-        .info-panel {
-            position: fixed; bottom: 0; left: 0; right: 0;
-            background: white; padding: 20px;
-            border-radius: 16px 16px 0 0;
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
-            max-height: 60vh; overflow-y: auto;
-            transform: translateY(100%);
-            transition: transform 0.3s ease;
-            z-index: 1000;
-        }
+        .info-panel { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 20px; border-radius: 16px 16px 0 0; box-shadow: 0 -4px 20px rgba(0,0,0,0.1); max-height: 60vh; overflow-y: auto; transform: translateY(100%); transition: transform 0.3s ease; z-index: 1000; }
         .info-panel.active { transform: translateY(0); }
         .info-panel h3 { margin-bottom: 10px; color: #333; font-size: 18px; }
         .info-panel p { color: #666; line-height: 1.5; margin-bottom: 15px; font-size: 14px; }
-        
-        .close-btn {
-            position: absolute; top: 15px; right: 15px;
-            background: #f0f2f5; border: none;
-            width: 32px; height: 32px; border-radius: 50%;
-            cursor: pointer; font-size: 18px; color: #666;
-        }
-        
-        .route-btn {
-            display: block; width: 100%;
-            padding: 12px; margin-top: 10px;
-            background: #4CAF50; color: white;
-            border: none; border-radius: 6px;
-            cursor: pointer; font-size: 14px;
-            font-weight: bold;
-        }
-        .route-btn:hover { background: #45a049; }
-        .route-btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-        
-        .external-route-btn {
-            display: block; width: 100%;
-            padding: 10px; margin-top: 8px;
-            background: #2196F3; color: white;
-            border: none; border-radius: 6px;
-            cursor: pointer; font-size: 13px;
-            text-decoration: none; text-align: center;
-        }
-        .external-route-btn:hover { background: #1976D2; }
-        
-        .distance-warning {
-            background: #fff3cd;
-            border-left: 4px solid #ffc107;
-            padding: 10px;
-            margin-top: 10px;
-            border-radius: 4px;
-            font-size: 13px;
-            color: #856404;
-            display: none;
-        }
-        .distance-warning.active { display: block; }
-        
-        .loading {
-            position: fixed; top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.85); color: white;
-            padding: 25px 40px; border-radius: 12px;
-            z-index: 2000; display: none;
-            text-align: center;
-            min-width: 250px;
-        }
-        .loading.active { display: block; }
-        .loading-spinner {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #4CAF50;
-            border-radius: 50%;
-            width: 40px; height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .loading-text {
-            margin-bottom: 15px;
-            font-size: 14px;
-        }
-        .loading-timer {
-            font-size: 12px;
-            color: #aaa;
-            margin-bottom: 10px;
-        }
-        .loading-cancel {
-            padding: 8px 16px;
-            background: #f44336; color: white;
-            border: none; border-radius: 6px;
-            cursor: pointer; font-size: 13px;
-        }
-        
-        .error-message {
-            position: fixed; top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            background: white; padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-            z-index: 2000; display: none;
-            max-width: 400px;
-            text-align: center;
-        }
-        .error-message.active { display: block; }
-        .error-message h3 { color: #f44336; margin-bottom: 15px; }
-        .error-message p { color: #666; margin-bottom: 20px; line-height: 1.5; }
-        .error-message button {
-            padding: 10px 20px;
-            background: #4CAF50; color: white;
-            border: none; border-radius: 6px;
-            cursor: pointer; font-size: 14px;
-        }
-        
+        .close-btn { position: absolute; top: 15px; right: 15px; background: #f0f2f5; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 18px; color: #666; }
+        .external-route-btn { display: block; width: 100%; padding: 14px; margin-top: 10px; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 15px; text-decoration: none; text-align: center; font-weight: bold; }
+        .external-route-btn.yandex { background: #FC3F1D; }
+        .external-route-btn.yandex:hover { background: #D93316; }
+        .external-route-btn.google { background: #2196F3; }
+        .external-route-btn.google:hover { background: #1976D2; }
         .user-location-marker { position: relative; }
-        .user-location-dot {
-            width: 20px; height: 20px;
-            background: #2196F3;
-            border: 3px solid white;
-            border-radius: 50%;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-        }
-        .user-location-pulse {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 20px; height: 20px;
-            background: rgba(33, 150, 243, 0.3);
-            border-radius: 50%;
-            animation: user-pulse 2s infinite;
-        }
-        @keyframes user-pulse {
-            0% { width: 20px; height: 20px; opacity: 1; }
-            100% { width: 60px; height: 60px; opacity: 0; }
-        }
+        .user-location-dot { width: 20px; height: 20px; background: #2196F3; border: 3px solid white; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+        .user-location-pulse { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 20px; height: 20px; background: rgba(33, 150, 243, 0.3); border-radius: 50%; animation: user-pulse 2s infinite; }
+        @keyframes user-pulse { 0% { width: 20px; height: 20px; opacity: 1; } 100% { width: 60px; height: 60px; opacity: 0; } }
     </style>
 </head>
 <body>
     <div id="map"></div>
-    
-    <div class="loading" id="loading">
-        <div class="loading-spinner"></div>
-        <div class="loading-text" id="loadingText">Построение маршрута...</div>
-        <div class="loading-timer" id="loadingTimer">Осталось: 15 сек</div>
-        <button class="loading-cancel" onclick="cancelLoading()">Отменить</button>
-    </div>
-    
-    <div class="error-message" id="errorMessage">
-        <h3 id="errorTitle">⚠️ Ошибка</h3>
-        <p id="errorText">Произошла ошибка</p>
-        <button onclick="closeError()">Понятно</button>
-    </div>
-    
     <div class="chapter-list" id="chapterList">
         <div class="chapter-list-title">📍 Точки экскурсии</div>
     </div>
-    
     <div class="controls">
         <button class="control-btn" id="locationBtn" title="Моё местоположение">📍</button>
         <button class="control-btn" id="trackBtn" title="Включить отслеживание">🛰️</button>
     </div>
-    
     <div class="accuracy-info" id="accuracyInfo">
         🎯 Точность: <span id="accuracyValue">—</span> м
     </div>
-    
-    <div class="route-info" id="routeInfo">
-        <h4>🧭 Маршрут</h4>
-        <p id="routeDistance">Расстояние: —</p>
-        <p id="routeDuration">Время: —</p>
-        <button class="clear-route-btn" onclick="clearRoute()">❌ Убрать маршрут</button>
-    </div>
-    
     <div class="info-panel" id="infoPanel">
         <button class="close-btn" onclick="closePanel()">×</button>
         <h3 id="infoTitle">Название</h3>
         <p id="infoText">Описание</p>
-        
-        <div class="distance-warning" id="distanceWarning">
-            ⚠️ Вы находитесь далеко от Валаама. Маршрут через карту может не построиться. 
-            Рекомендуем использовать Яндекс.Карты или Google Maps.
-        </div>
-        
-        <button class="route-btn" id="buildRouteBtn" onclick="buildRouteToCurrent()">🧭 Построить маршрут на карте</button>
-        <a href="#" id="yandexRouteLink" class="external-route-btn" target="_blank">🗺️ Открыть в Яндекс.Картах</a>
-        <a href="#" id="googleRouteLink" class="external-route-btn" target="_blank">🌍 Открыть в Google Maps</a>
+        <a href="#" id="yandexRouteLink" class="external-route-btn yandex" target="_blank">🗺️ Открыть маршрут в Яндекс.Картах</a>
+        <a href="#" id="googleRouteLink" class="external-route-btn google" target="_blank">🌍 Открыть маршрут в Google Maps</a>
     </div>
-
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
-    
     <script>
         const chapters = [
             { id: 1, title: "Глава 1. Ладога и путь на Валаам", lat: 61.3539, lng: 30.9186, description: "Суровые скалистые берега Ладожских шхер." },
@@ -292,46 +73,26 @@
             { id: 11, title: "Глава 10. Знаменитые гости", lat: 61.3551, lng: 30.9201, description: "Ф. И. Тютчев, Н.К. Рерих." },
             { id: 12, title: "Глава 11. Современный Валаам", lat: 61.3554, lng: 30.9204, description: "Дорогие гости, спасибо за путешествие!" }
         ];
-
         const map = L.map('map').setView([61.3539, 30.9186], 15);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors',
-            maxZoom: 19
+            attribution: '© OpenStreetMap contributors', maxZoom: 19
         }).addTo(map);
-
-        let userMarker = null;
-        let accuracyCircle = null;
-        let watchId = null;
-        let isTracking = false;
+        let userMarker = null, accuracyCircle = null, watchId = null, isTracking = false;
         let currentDestination = null;
-        let routingControl = null;
-        let loadingTimer = null;
-        let loadingTimeout = null;
-        let loadingSecondsLeft = 15;
-
+        window.userLocation = null;
         const markers = [];
         const chapterList = document.getElementById('chapterList');
-
         chapters.forEach((chapter, index) => {
             const marker = L.marker([chapter.lat, chapter.lng])
                 .addTo(map)
-                .bindPopup(`
-                    <div style="min-width: 200px;">
-                        <h3 style="margin: 0 0 8px 0; color: #333;">${chapter.title}</h3>
-                        <p style="margin: 0 0 10px 0; color: #666; font-size: 13px;">${chapter.description}</p>
-                        <button onclick="setDestination(${chapter.lat}, ${chapter.lng})" style="width: 100%; padding: 8px; background: #4CAF50; color: white; border: none; border-radius: 6px; cursor: pointer;">🧭 Маршрут сюда</button>
-                    </div>
-                `);
-            
+                .bindPopup(`<b>${chapter.title}</b><br>${chapter.description}`);
             marker.on('click', () => {
                 showInfo(chapter);
                 highlightChapter(index);
                 currentDestination = { lat: chapter.lat, lng: chapter.lng, title: chapter.title };
                 updateExternalLinks();
             });
-            
             markers.push(marker);
-
             const item = document.createElement('div');
             item.className = 'chapter-item';
             item.textContent = `${index + 1}. ${chapter.title}`;
@@ -345,409 +106,114 @@
             };
             chapterList.appendChild(item);
         });
-
-        // === РАСЧЁТ РАССТОЯНИЯ (формула Haversine) ===
-        
-        function calculateDistance(lat1, lng1, lat2, lng2) {
-            const R = 6371; // радиус Земли в км
-            const dLat = (lat2 - lat1) * Math.PI / 180;
-            const dLng = (lng2 - lng1) * Math.PI / 180;
-            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                      Math.sin(dLng/2) * Math.sin(dLng/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            return R * c;
-        }
-
-        // === ОБНОВЛЕНИЕ ССЫЛОК НА ВНЕШНИЕ КАРТЫ ===
-        
         function updateExternalLinks() {
             if (!currentDestination) return;
-            
             const dest = currentDestination;
-            
-            // Яндекс.Карты
             let yandexUrl;
             if (window.userLocation) {
-                yandexUrl = `https://yandex.ru/maps/?pt=${window.userLocation.lng},${window.userLocation.lat}~${dest.lng},${dest.lat}&rtt=pt&z=14`;
+                yandexUrl = `https://yandex.ru/maps/?pt=${window.userLocation.lng},${window.userLocation.lat}~${dest.lng},${dest.lat}&rtt=pt&z=15`;
             } else {
-                yandexUrl = `https://yandex.ru/maps/?pt=${dest.lng},${dest.lat}&z=15`;
+                yandexUrl = `https://yandex.ru/maps/?pt=${dest.lng},${dest.lat}&z=16`;
             }
             document.getElementById('yandexRouteLink').href = yandexUrl;
-            
-            // Google Maps
             let googleUrl;
             if (window.userLocation) {
-                googleUrl = `https://www.google.com/maps/dir/${window.userLocation.lat},${window.userLocation.lng}/${dest.lat},${dest.lng}/@${dest.lat},${dest.lng},14z/data=!3m1!4b1!4m2!4m1!3e2`;
+                googleUrl = `https://www.google.com/maps/dir/${window.userLocation.lat},${window.userLocation.lng}/${dest.lat},${dest.lng}/@${dest.lat},${dest.lng},15z/data=!3m1!4b1!4m2!4m1!3e2`;
             } else {
                 googleUrl = `https://www.google.com/maps/place/${dest.lat},${dest.lng}`;
             }
             document.getElementById('googleRouteLink').href = googleUrl;
-            
-            // Показываем предупреждение, если далеко
-            const warningEl = document.getElementById('distanceWarning');
-            const buildBtn = document.getElementById('buildRouteBtn');
-            
-            if (window.userLocation) {
-                const distance = calculateDistance(
-                    window.userLocation.lat, window.userLocation.lng,
-                    dest.lat, dest.lng
-                );
-                
-                if (distance > 50) {
-                    warningEl.classList.add('active');
-                    warningEl.innerHTML = `⚠️ Вы находитесь в <b>${distance.toFixed(0)} км</b> от Валаама. Маршрут через карту может не построиться. Рекомендуем использовать Яндекс.Карты или Google Maps.`;
-                    buildBtn.disabled = true;
-                    buildBtn.textContent = '🚫 Слишком далеко для построения';
-                } else {
-                    warningEl.classList.remove('active');
-                    buildBtn.disabled = false;
-                    buildBtn.textContent = '🧭 Построить маршрут на карте';
-                }
-            } else {
-                warningEl.classList.remove('active');
-                buildBtn.disabled = false;
-                buildBtn.textContent = '🧭 Построить маршрут на карте';
-            }
         }
-
-        // === ФУНКЦИИ ГЕОЛОКАЦИИ ===
-
+        currentDestination = { lat: chapters[0].lat, lng: chapters[0].lng, title: chapters[0].title };
+        updateExternalLinks();
         function updateUserMarker(lat, lng, accuracy) {
             const latlng = [lat, lng];
-            
             if (userMarker) map.removeLayer(userMarker);
             if (accuracyCircle) map.removeLayer(accuracyCircle);
-            
             const userIcon = L.divIcon({
                 className: 'user-location-marker',
-                html: `
-                    <div class="user-location-pulse"></div>
-                    <div class="user-location-dot"></div>
-                `,
-                iconSize: [20, 20],
-                iconAnchor: [10, 10]
+                html: `<div class="user-location-pulse"></div><div class="user-location-dot"></div>`,
+                iconSize: [20, 20], iconAnchor: [10, 10]
             });
-            
             userMarker = L.marker(latlng, { icon: userIcon, zIndexOffset: 1000 })
-                .addTo(map)
-                .bindPopup('📍 Ваше местоположение');
-            
+                .addTo(map).bindPopup('📍 Ваше местоположение');
             accuracyCircle = L.circle(latlng, {
-                radius: accuracy,
-                color: '#2196F3',
-                fillColor: '#2196F3',
-                fillOpacity: 0.1,
-                weight: 1
+                radius: accuracy, color: '#2196F3', fillColor: '#2196F3', fillOpacity: 0.1, weight: 1
             }).addTo(map);
-            
             document.getElementById('accuracyValue').textContent = Math.round(accuracy);
             document.getElementById('accuracyInfo').classList.add('active');
         }
-
         function getUserLocation() {
-            if (!navigator.geolocation) {
-                showError('Геолокация не поддерживается', 'Ваш браузер не поддерживает определение местоположения.');
-                return;
-            }
-            
-            showLoading('Определение местоположения...');
-            
+            if (!navigator.geolocation) { alert('Геолокация не поддерживается'); return; }
             navigator.geolocation.getCurrentPosition(
                 (position) => {
-                    hideLoading();
                     const { latitude, longitude, accuracy } = position.coords;
-                    
                     window.userLocation = { lat: latitude, lng: longitude };
                     updateUserMarker(latitude, longitude, accuracy);
                     map.setView([latitude, longitude], 17);
-                    
                     document.getElementById('locationBtn').classList.add('active');
-                    
-                    // Обновляем ссылки и проверяем расстояние
                     updateExternalLinks();
                 },
                 (error) => {
-                    hideLoading();
-                    handleLocationError(error);
+                    let errorMsg = 'Не удалось получить местоположение';
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED: errorMsg = 'Вы запретили доступ к геолокации. Разрешите в настройках.'; break;
+                        case error.POSITION_UNAVAILABLE: errorMsg = 'Информация о местоположении недоступна.'; break;
+                        case error.TIMEOUT: errorMsg = 'Превышено время ожидания.'; break;
+                    }
+                    alert(errorMsg);
                 },
-                {
-                    enableHighAccuracy: true,
-                    timeout: 10000,
-                    maximumAge: 0
-                }
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
             );
         }
-
         function toggleTracking() {
-            if (isTracking) stopTracking();
-            else startTracking();
+            if (isTracking) stopTracking(); else startTracking();
         }
-
         function startTracking() {
-            if (!navigator.geolocation) {
-                showError('Ошибка', 'Геолокация не поддерживается');
-                return;
-            }
-            
-            showLoading('Включение отслеживания...');
-            
+            if (!navigator.geolocation) { alert('Геолокация не поддерживается'); return; }
             watchId = navigator.geolocation.watchPosition(
                 (position) => {
-                    hideLoading();
                     const { latitude, longitude, accuracy } = position.coords;
-                    
                     window.userLocation = { lat: latitude, lng: longitude };
                     updateUserMarker(latitude, longitude, accuracy);
-                    
-                    // Обновляем ссылки
                     updateExternalLinks();
-                    
-                    // Перестраиваем маршрут, если он есть
-                    if (routingControl && currentDestination) {
-                        rebuildRoute();
-                    }
                 },
-                (error) => {
-                    hideLoading();
-                    handleLocationError(error);
-                    stopTracking();
-                },
-                {
-                    enableHighAccuracy: true,
-                    timeout: 15000,
-                    maximumAge: 5000
-                }
+                (error) => { alert('Ошибка геолокации: ' + error.message); stopTracking(); },
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
             );
-            
             isTracking = true;
             document.getElementById('trackBtn').classList.add('tracking');
             document.getElementById('trackBtn').title = 'Остановить отслеживание';
         }
-
         function stopTracking() {
-            if (watchId !== null) {
-                navigator.geolocation.clearWatch(watchId);
-                watchId = null;
-            }
+            if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
             isTracking = false;
             document.getElementById('trackBtn').classList.remove('tracking');
             document.getElementById('trackBtn').title = 'Включить отслеживание';
         }
-
-        function handleLocationError(error) {
-            let errorMsg = 'Не удалось получить местоположение';
-            switch(error.code) {
-                case error.PERMISSION_DENIED:
-                    errorMsg = '❌ Вы запретили доступ к геолокации.\n\nРазрешите в настройках браузера/телефона.';
-                    break;
-                case error.POSITION_UNAVAILABLE:
-                    errorMsg = '📡 Информация о местоположении недоступна.\n\nПопробуйте выйти на открытое пространство.';
-                    break;
-                case error.TIMEOUT:
-                    errorMsg = '⏱ Превышено время ожидания.\n\nПроверьте подключение к интернету и GPS.';
-                    break;
-            }
-            showError('Ошибка геолокации', errorMsg);
-        }
-
-        // === МАРШРУТЫ ===
-
-        function buildRoute() {
-            if (!window.userLocation) {
-                showError('Нужно местоположение', 'Сначала определите ваше местоположение (кнопка 📍)');
-                return;
-            }
-            if (!currentDestination) {
-                showError('Нужна точка', 'Выберите точку назначения на карте');
-                return;
-            }
-            
-            // Проверяем расстояние
-            const distance = calculateDistance(
-                window.userLocation.lat, window.userLocation.lng,
-                currentDestination.lat, currentDestination.lng
-            );
-            
-            if (distance > 50) {
-                showError('Слишком далеко', 
-                    `Вы находитесь в ${distance.toFixed(0)} км от Валаама.\n\n` +
-                    `OSRM не может построить маршрут на такое расстояние.\n\n` +
-                    `Используйте кнопки "Открыть в Яндекс.Картах" или "Открыть в Google Maps" для построения маршрута.`);
-                return;
-            }
-            
-            showLoadingWithTimer('Построение маршрута...');
-            
-            if (routingControl) map.removeControl(routingControl);
-            
-            routingControl = L.Routing.control({
-                waypoints: [
-                    L.latLng(window.userLocation.lat, window.userLocation.lng),
-                    L.latLng(currentDestination.lat, currentDestination.lng)
-                ],
-                routeWhileDragging: false,
-                showAlternatives: false,
-                addWaypoints: false,
-                timeout: 10000,  // Таймаут 10 секунд
-                lineOptions: {
-                    styles: [{ color: '#4CAF50', weight: 6, opacity: 0.8 }]
-                },
-                createMarker: () => null
-            }).addTo(map);
-            
-            routingControl.on('routesfound', function(e) {
-                hideLoading();
-                const route = e.routes[0];
-                const distance = (route.summary.totalDistance / 1000).toFixed(2);
-                const duration = Math.round(route.summary.totalTime / 60);
-                
-                document.getElementById('routeDistance').textContent = `Расстояние: ${distance} км`;
-                document.getElementById('routeDuration').textContent = `Время: ${duration} мин`;
-                document.getElementById('routeInfo').classList.add('active');
-            });
-            
-            routingControl.on('routingerror', function(e) {
-                hideLoading();
-                showError('Не удалось построить маршрут', 
-                    'Сервис маршрутов не смог построить путь.\n\n' +
-                    'Попробуйте:\n' +
-                    '• Использовать кнопки "Открыть в Яндекс.Картах" или "Google Maps"\n' +
-                    '• Убедиться, что вы находитесь на Валааме');
-            });
-        }
-
-        function rebuildRoute() {
-            if (routingControl) {
-                routingControl.setWaypoints([
-                    L.latLng(window.userLocation.lat, window.userLocation.lng),
-                    L.latLng(currentDestination.lat, currentDestination.lng)
-                ]);
-            }
-        }
-
-        function setDestination(lat, lng) {
-            currentDestination = { lat, lng };
-            updateExternalLinks();
-            buildRoute();
-        }
-
-        function buildRouteToCurrent() {
-            if (currentDestination) buildRoute();
-        }
-
-        function clearRoute() {
-            if (routingControl) {
-                map.removeControl(routingControl);
-                routingControl = null;
-            }
-            document.getElementById('routeInfo').classList.remove('active');
-        }
-
-        // === UI ФУНКЦИИ ===
-
         function showInfo(chapter) {
             document.getElementById('infoTitle').textContent = chapter.title;
             document.getElementById('infoText').textContent = chapter.description;
             document.getElementById('infoPanel').classList.add('active');
             updateExternalLinks();
         }
-
         function highlightChapter(activeIndex) {
             document.querySelectorAll('.chapter-item').forEach((el, index) => {
                 if (index === activeIndex) {
                     el.classList.add('active');
                     el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                } else {
-                    el.classList.remove('active');
-                }
+                } else { el.classList.remove('active'); }
             });
         }
-
-        function closePanel() {
-            document.getElementById('infoPanel').classList.remove('active');
-        }
-
-        function showLoading(text = 'Загрузка...') {
-            document.getElementById('loadingText').textContent = text;
-            document.getElementById('loadingTimer').style.display = 'none';
-            document.querySelector('.loading-cancel').style.display = 'none';
-            document.getElementById('loading').classList.add('active');
-        }
-
-        function showLoadingWithTimer(text = 'Загрузка...') {
-            loadingSecondsLeft = 15;
-            document.getElementById('loadingText').textContent = text;
-            document.getElementById('loadingTimer').style.display = 'block';
-            document.querySelector('.loading-cancel').style.display = 'inline-block';
-            document.getElementById('loadingTimer').textContent = `Осталось: ${loadingSecondsLeft} сек`;
-            document.getElementById('loading').classList.add('active');
-            
-            // Таймер обратного отсчёта
-            loadingTimer = setInterval(() => {
-                loadingSecondsLeft--;
-                document.getElementById('loadingTimer').textContent = `Осталось: ${loadingSecondsLeft} сек`;
-                
-                if (loadingSecondsLeft <= 0) {
-                    cancelLoading();
-                    showError('Превышено время ожидания', 
-                        'Сервис маршрутов не отвечает.\n\n' +
-                        'Попробуйте:\n' +
-                        '• Подождать и попробовать снова\n' +
-                        '• Использовать кнопки "Открыть в Яндекс.Картах" или "Google Maps"');
-                }
-            }, 1000);
-            
-            // Дополнительный таймаут на 20 секунд (на случай если таймер не сработал)
-            loadingTimeout = setTimeout(() => {
-                cancelLoading();
-            }, 20000);
-        }
-
-        function hideLoading() {
-            document.getElementById('loading').classList.remove('active');
-            if (loadingTimer) {
-                clearInterval(loadingTimer);
-                loadingTimer = null;
-            }
-            if (loadingTimeout) {
-                clearTimeout(loadingTimeout);
-                loadingTimeout = null;
-            }
-        }
-
-        function cancelLoading() {
-            hideLoading();
-            // Удаляем контрол маршрута, если он есть
-            if (routingControl) {
-                map.removeControl(routingControl);
-                routingControl = null;
-            }
-        }
-
-        function showError(title, text) {
-            document.getElementById('errorTitle').textContent = title;
-            document.getElementById('errorText').textContent = text;
-            document.getElementById('errorMessage').classList.add('active');
-        }
-
-        function closeError() {
-            document.getElementById('errorMessage').classList.remove('active');
-        }
-
-        // === ОБРАБОТЧИКИ СОБЫТИЙ ===
-
+        function closePanel() { document.getElementById('infoPanel').classList.remove('active'); }
         document.getElementById('locationBtn').addEventListener('click', getUserLocation);
         document.getElementById('trackBtn').addEventListener('click', toggleTracking);
-
         map.on('click', closePanel);
         document.getElementById('infoPanel').addEventListener('click', (e) => e.stopPropagation());
-
         if (window.Telegram && window.Telegram.WebApp) {
             window.Telegram.WebApp.ready();
             window.Telegram.WebApp.expand();
         }
-
         window.addEventListener('beforeunload', stopTracking);
     </script>
 </body>
